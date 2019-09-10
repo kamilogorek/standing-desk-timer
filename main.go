@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,34 +34,31 @@ $$\   $$ |$$ |      $$ |  $$ |  $$ |         $$ |  $$ |$$ |  $$ |$$$  / \$$$ |$$
  \______/ \________|\__|  \__|  \__|         \_______/  \______/ \__/     \__|\__|  \__|
  `
 
-var standSound = exec.Command("say", "Stand Up")
-var seatSound = exec.Command("say", "Seat Down")
-
-var standNotification = exec.Command("osascript", "-e", "display notification \"Stand Up\" with title \"Standing Desk Notifier\"")
-var seatNotification = exec.Command("osascript", "-e", "display notification \"Seat Down\" with title \"Standing Desk Notifier\"")
-
 func detailsBanner(duration time.Duration) string {
 	// Mon Jan 2 15:04:05 MST 2006
 	timeFormat := "15:04"
 	now := time.Now()
 
-	return fmt.Sprintf("\n===============\n"+
+	return fmt.Sprintf("\n============\n"+
 		"Start: %s\n"+
 		"End:   %s\n"+
-		"Duration: %s\n"+
-		"===============", now.Format(timeFormat), now.Add(duration).Format(timeFormat), duration)
+		"Duration: %02d\n"+
+		"============\n", now.Format(timeFormat), now.Add(duration).Format(timeFormat), int(duration.Minutes()))
 }
 
 func startupBanner(standTime time.Duration, seatTime time.Duration) string {
-	return fmt.Sprintf("\n=================\nStand Time: %s\nSeat Time:  %s\n=================", standTime, seatTime)
+	return fmt.Sprintf("\n==============\n"+
+		"Stand Time: %02d\n"+
+		"Seat Time:  %02d\n"+
+		"==============", int(standTime.Minutes()), int(seatTime.Minutes()))
 }
 
-func progressBar() {
-	fmt.Println("")
+func sleep(duration time.Duration) {
+	cycles := int(duration.Minutes())
 
-	for i := 0; i < 8; i++ {
-		fmt.Println("* * * * * * * *")
-		time.Sleep(time.Second)
+	for i := 0; i < cycles; i++ {
+		fmt.Printf("%s\n", strings.Repeat("* ", cycles-i))
+		time.Sleep(time.Minute)
 	}
 }
 
@@ -85,16 +83,19 @@ func main() {
 	fmt.Println(startupBanner(standTime, seatTime))
 
 	for {
+		standSound := exec.Command("say", "Stand Up")
+		seatSound := exec.Command("say", "Seat Down")
+		standNotification := exec.Command("osascript", "-e", "display notification \"Stand Up\" with title \"Standing Desk Notifier\"")
+		seatNotification := exec.Command("osascript", "-e", "display notification \"Seat Down\" with title \"Standing Desk Notifier\"")
+
 		fmt.Println(standBanner, detailsBanner(standTime))
 		standSound.Run()
 		standNotification.Run()
-		progressBar()
-		time.Sleep(standTime)
+		sleep(standTime)
 
 		fmt.Println(seatBanner, detailsBanner(seatTime))
 		seatSound.Run()
 		seatNotification.Run()
-		progressBar()
-		time.Sleep(seatTime)
+		sleep(seatTime)
 	}
 }
