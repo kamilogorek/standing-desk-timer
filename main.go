@@ -55,6 +55,15 @@ func startupBanner(standTime time.Duration, seatTime time.Duration) string {
 	return fmt.Sprintf("\n=================\nStand Time: %s\nSeat Time:  %s\n=================", standTime, seatTime)
 }
 
+func progressBar() {
+	fmt.Println("")
+
+	for i := 0; i < 8; i++ {
+		fmt.Println("* * * * * * * *")
+		time.Sleep(time.Second)
+	}
+}
+
 func main() {
 	var standArg int
 	var seatArg int
@@ -79,11 +88,13 @@ func main() {
 		fmt.Println(standBanner, detailsBanner(standTime))
 		standSound.Run()
 		standNotification.Run()
+		progressBar()
 		time.Sleep(standTime)
 
 		fmt.Println(seatBanner, detailsBanner(seatTime))
 		seatSound.Run()
 		seatNotification.Run()
+		progressBar()
 		time.Sleep(seatTime)
 	}
 }
